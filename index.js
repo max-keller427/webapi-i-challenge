@@ -9,19 +9,18 @@ const db = require("./data/db.js");
 server.use(express.json());
 
 server.post("/api/users", (req, res) => {
-  const newPost = req.body;
+  const user = req.body;
   //   console.log(newPost);
-
-  db.insert(req.body)
+  if (user.name && user.bio) {
+    res.status(201).json(user);
+  } else {
+    res
+      .status(400)
+      .json({ errorMessage: "Please provide name and bio for the user." });
+  }
+  db.insert(user)
     .then(user => {
-      //   console.log(user);
-      if (user.name || user.bio !== null) {
-        res.status(201).json(user);
-      } else {
-        res
-          .status(400)
-          .json({ errorMessage: "Please provide name and bio for the user." });
-      }
+      res.status(201).json(user);
     })
     .catch(error => {
       res.status(500).json({
@@ -84,16 +83,17 @@ server.put("/api/users/:id", (req, res) => {
 
   db.update(id, changes)
     .then(user => {
-      if (user.name || user.bio === null) {
-        res
-          .status(400)
-          .json({ errorMessage: "Please provide name and bio for the user." });
-      } else if (user.id === null) {
+      if (!changes.id) {
         res
           .status(404)
           .json({ message: "The user with the specified ID does not exist." });
-      } else {
+      }
+      if (changes.name && changes.bio) {
         res.status(200).json(user);
+      } else {
+        res
+          .status(400)
+          .json({ errorMessage: "Please provide name and bio for the user." });
       }
     })
     .catch(err => {
@@ -101,6 +101,32 @@ server.put("/api/users/:id", (req, res) => {
         .status(500)
         .json({ error: "The user information could not be modified." });
     });
+
+  //   const { id } = req.params;
+  //   const updateUser = req.body;
+  //   if (!updateUser.id) {
+  //     res
+  //       .status(404)
+  //       .json({ message: "The user with the specified ID does not exist." });
+  //   }
+  //   if (updateUser.name && updateUser.bio) {
+  //     res.status(201).json(updateUser);
+  //   } else {
+  //     res
+  //       .status(400)
+  //       .json({ errorMessage: "Please provide name and bio for the user." });
+  //     return;
+  //   }
+  //   db.update(id, updateUser)
+  //     .then(updated => {
+  //       res.status(201).json(updated);
+  //     })
+
+  //     .catch(error => {
+  //       res
+  //         .status(500)
+  //         .json({ error: "The user information could not be modified." });
+  //     });
 });
 
 server.listen(5000, () => console.log("running"));
